@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Cross an Invercargill Road: Extreme Edition</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <style>
+      canvas {
+        border: 1px solid black;
+        display: block;
+        margin: 0 auto;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="gamecanvas" width="1500" height="900"></canvas>
+    <script>
+      var canvas, canvasContext;
+      var player;
+      var obstacles = [];
+
+      window.onload = function () {
+        canvas = document.getElementById('gamecanvas');
+        canvasContext = canvas.getContext('2d');
+
+        document.addEventListener('keydown', keyPressed);
+        document.addEventListener('keyup', keyReleased);
+
+        player = new Player(50, canvas.height - 30, 20, 20, 'green', 5);
+
+        // Initialize obstacles
+        spawnObstacles();
+
+        requestAnimationFrame(mainLoop);
+      };
+
+      const LEFT_KEY = 37;
+      const UP_KEY = 38;
+      const RIGHT_KEY = 39;
+      const DOWN_KEY = 40;
+
+      var keysPressed = {};
+
+      function keyPressed(evt) {
+        keysPressed[evt.keyCode] = true;
+      }
+
+      function keyReleased(evt) {
+        delete keysPressed[evt.keyCode];
+      }
+
+      class Player {
+        constructor(x, y, w, h, c, speed) {
+          this.x = x;
+          this.y = y;
+          this.w = w;
+          this.h = h;
+          this.c = c;
+          this.speed = speed;
+        }
+
+        move() {
+          if (keysPressed[LEFT_KEY] && this.x > 0) {
+            this.x -= this.speed;
+          }
+          if (keysPressed[RIGHT_KEY] && this.x + this.w < canvas.width) {
+            this.x += this.speed;
+          }
+          if (keysPressed[UP_KEY] && this.y > 0) {
+            this.y -= this.speed;
+          }
+          if (keysPressed[DOWN_KEY] && this.y + this.h < canvas.height) {
+            this.y += this.speed;
+          }
+        }
+
+        draw() {
+          canvasContext.fillStyle = this.c;
+          canvasContext.fillRect(this.x, this.y, this.w, this.h);
+        }
+      }
+
+      class Obstacle {
+        constructor(x, y, w, h, c, speed) {
+          this.x = x;
+          this.y = y;
+          this.w = w;
+          this.h = h;
+          this.c = c;
+          this.speed = speed;
+        }
+
+        move() {
+          this.x += this.speed;
+          if (this.x > canvas.width) {
+            this.x = -this.w;
+          }
+        }
+
+        draw() {
+          canvasContext.fillStyle = this.c;
+          canvasContext.fillRect(this.x, this.y, this.w, this.h);
+        }
+      }
+
+      function spawnObstacles() {
+        for (let i = 0; i < 5; i++) {
+          const obstacle = new Obstacle(
+            Math.random() * canvas.width,
+            i * 40,
+            40,
+            20,
+            'red',
+            2
+          );
+          obstacles.push(obstacle);
+        }
+      }
+
+      function checkCollision(player, obstacle) {
+        return (
+          player.x < obstacle.x + obstacle.w &&
+          player.x + player.w > obstacle.x &&
+          player.y < obstacle.y + obstacle.h &&
+          player.y + player.h > obstacle.y
+        );
+      }
+
+      function mainLoop() {
+        // Clear canvas
+        canvasContext.clearRect(0, 0, canvas.width, canvas.height, 'black');
+
+        // Move and draw player
+        player.move();
+        player.draw();
+
+        // Move and draw obstacles
+        for (let i = 0; i < obstacles.length; i++) {
+          const obstacle = obstacles[i];
+          obstacle.move();
+          obstacle.draw();
+
+          // Check collision with player
+          if (checkCollision(player, obstacle)) {
+            console.log('Collision!');
+          }
+        }
+
+        requestAnimationFrame(mainLoop);
+      }
+    </script>
+  </body>
+</html>
